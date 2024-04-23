@@ -27,7 +27,7 @@ func TestRunTestSuite(t *testing.T) {
 }
 
 func TestCanceledOutside(t *testing.T) {
-	wrapped, cancel := Wrap(func(ctx context.Context) (string, error) {
+	wrapped, cancel := Memoize(func(ctx context.Context) (string, error) {
 		sleepCtx(ctx, time.Hour)
 		return "never", nil
 	}, time.Hour)
@@ -46,7 +46,7 @@ func TestCanceledOutside(t *testing.T) {
 
 func TestCanceledCtx(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	wrapped, _ := Wrap(func(ctx context.Context) (string, error) {
+	wrapped, _ := Memoize(func(ctx context.Context) (string, error) {
 		sleepCtx(ctx, time.Hour)
 		return "never", nil
 	}, time.Hour)
@@ -90,7 +90,7 @@ func (s *TestSuite) SetupTest() {
 }
 
 func (s *TestSuite) initMemoizeFunc(ttl time.Duration, f func()) {
-	s.wrapped, _ = Wrap(func(ctx context.Context) (string, error) {
+	s.wrapped, _ = Memoize(func(ctx context.Context) (string, error) {
 		f()
 		atomic.AddInt64(&s.callCount, 1)
 		return s.retVal, s.retErr

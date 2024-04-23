@@ -11,43 +11,43 @@ type (
 	Func[T any] func(ctx context.Context) (T, error)
 )
 
-// Wrap returns a callback to the provided expensive function `f`, caching the result of the call
+// Memoize returns a callback to the provided expensive function `f`, caching the result of the call
 // and suppressing duplicate calls for the specified time `ttl`.
-// When calling the callback resulting from calling Wrap `Wf` for the first time,
+// When calling the callback resulting from calling Memoize `Wf` for the first time,
 // the underlying function `f` will be called. The result of the call `R` will be saved, remembered
 // and returned to any call of the callback `Wf` during the `ttl` time.
 // After that, the value `R` (the result of the previous call of `f`) is considered expired and
 // `f` will be called again with the same guarantees when calling `Wf`.
 // In other words, the state of the callback `Wf` after `ttl` time after calling `f`
-// goes into the initial state, which was immediately after the return of `Wf` by the Wrap function call.
-// The callback resulting from calling Wrap is thread-safe and can be called simultaneously
+// goes into the initial state, which was immediately after the return of `Wf` by the Memoize function call.
+// The callback resulting from calling Memoize is thread-safe and can be called simultaneously
 // from multiple goroutines without violating the invariant or data racing.
 //
 // Example:
-//		fun := func (context.Context) (string, error) {
-//			fmt.Println("some expensive and long computation")
-//			return "result", nil
-//		}
 //
-//		wrapped, _ := Wrap(fun, 2*time.Second)
+//	fun := func (context.Context) (string, error) {
+//		fmt.Println("some expensive and long computation")
+//		return "result", nil
+//	}
 //
-//		go wrapped(ctx) // ctx := context.Background()
-//		go wrapped(ctx)
-//		go wrapped(ctx)
+//	memoized, _ := Memoize(fun, 2*time.Second)
 //
-//		time.Sleep(time.Second)   // `fun` was called once, printed "some expensive and long computation"
-//		fmt.Println(wrapped(ctx)) //  `fun` was not called here, printed "result <nil>"
+//	go memoized(ctx) // ctx := context.Background()
+//	go memoized(ctx)
+//	go memoized(ctx)
 //
-//		time.Sleep(2 * time.Second) // pause while the result of the previous call is relevant
+//	time.Sleep(time.Second)   // `fun` was called once, printed "some expensive and long computation"
+//	fmt.Println(wrapped(ctx)) //  `fun` was not called here, printed "result <nil>"
 //
-//		go wrapped(ctx)
-//		go wrapped(ctx)
-//		go wrapped(ctx)
+//	time.Sleep(2 * time.Second) // pause while the result of the previous call is relevant
 //
-//		time.Sleep(time.Second)   // `fun` was called exactly one more time, printed "some expensive and long computation"
-//		fmt.Println(wrapped(ctx)) //  `fun` was not called here, printed "result <nil>"
-
-func Wrap[T any](f Func[T], ttl time.Duration) (Func[T], context.CancelFunc) {
+//	go memoized(ctx)
+//	go memoized(ctx)
+//	go memoized(ctx)
+//
+//	time.Sleep(time.Second)   // `fun` was called exactly one more time, printed "some expensive and long computation"
+//	fmt.Println(memoized(ctx)) //  `fun` was not called here, printed "result <nil>"
+func Memoize[T any](f Func[T], ttl time.Duration) (Func[T], context.CancelFunc) {
 	ctx, cancelCtx := context.WithCancel(context.Background())
 	m := &mem[T]{
 		ttl: ttl,

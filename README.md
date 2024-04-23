@@ -19,21 +19,21 @@ func fun(context.Context) (string, error) {
 }
 
 func main() {
-	wrapped, _ := memoize.Wrap(fun, 2*time.Second)
+	memoized, _ := memoize.Memoize(fun, 2*time.Second)
 	ctx := context.Background()
-	go wrapped(ctx)
-	go wrapped(ctx)
-	go wrapped(ctx)
+	go memoized(ctx)
+	go memoized(ctx)
+	go memoized(ctx)
 	time.Sleep(time.Second)   // `fun` was called once, "some expensive and long computation"
-	fmt.Println(wrapped(ctx)) //  `fun` was not called here, "result <nil>"
+	fmt.Println(memoized(ctx)) //  `fun` was not called here, "result <nil>"
 
 	time.Sleep(2 * time.Second) // pause while the result of the previous call is relevant
 
-	go wrapped(ctx)
-	go wrapped(ctx)
-	go wrapped(ctx)
+	go memoized(ctx)
+	go memoized(ctx)
+	go memoized(ctx)
 	time.Sleep(time.Second)   // `fun` was called exactly one more time, "some expensive and long computation"
-	fmt.Println(wrapped(ctx)) //  `fun` was not called here, "result <nil>"
+	fmt.Println(memoized(ctx)) //  `fun` was not called here, "result <nil>"
 }
 
 ```
