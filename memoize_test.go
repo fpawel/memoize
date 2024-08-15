@@ -68,6 +68,11 @@ func (s *TestSuite) TestBasic() {
 	s.testConcurrentCall()
 }
 
+func (s *TestSuite) TestInfinite() {
+	s.initMemoizeFunc(0, func() {})
+	s.testConcurrentCall()
+}
+
 func (s *TestSuite) TestTtl() {
 	s.initMemoizeFunc(time.Millisecond*10, func() {})
 	for i := 0; i < 10; i++ {
